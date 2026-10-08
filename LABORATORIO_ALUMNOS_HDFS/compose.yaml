@@ -1,0 +1,42 @@
+name: aula-hdfs
+x-hadoop: &hadoop
+  build: ./hadoop
+  image: aula-hadoop:3.4.2
+  environment:
+    HADOOP_HEAPSIZE_MAX: "512"
+  mem_limit: 1g
+
+services:
+  namenode:
+    <<: *hadoop
+    hostname: namenode
+    command: [namenode]
+    ports: ["127.0.0.1:9870:9870"]
+    volumes: ["nn:/data/name", "./datos:/datos"]
+
+  dn1:
+    <<: *hadoop
+    hostname: dn1
+    command: [datanode]
+    depends_on: [namenode]
+    volumes: ["dn1:/data/data"]
+
+  dn2:
+    <<: *hadoop
+    hostname: dn2
+    command: [datanode]
+    depends_on: [namenode]
+    volumes: ["dn2:/data/data"]
+
+  dn3:
+    <<: *hadoop
+    hostname: dn3
+    command: [datanode]
+    depends_on: [namenode]
+    volumes: ["dn3:/data/data"]
+
+volumes:
+  nn:
+  dn1:
+  dn2:
+  dn3:

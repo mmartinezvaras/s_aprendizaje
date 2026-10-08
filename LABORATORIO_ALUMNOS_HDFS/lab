@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+mode="${1:?Uso: ./lab h argumentos}"
+shift
+case "$mode" in
+  h) exec docker compose exec -T namenode hdfs "$@" ;;
+  *) echo 'En esta primera entrega solo está disponible: ./lab h ...' >&2; exit 2 ;;
+esac
