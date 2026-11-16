@@ -2,13 +2,12 @@
 
 # 🎓 Machine Learning Systems — Coursework
 
-**Course work from the Big Data & AI specialisation: a distributed HDFS cluster in Docker, and exploratory data analysis that prepares real-world-style datasets for machine learning.**
+**Machine Learning Systems coursework from the Big Data & AI master's: exploring real-world-style datasets, cleaning them and turning them into leakage-free scikit-learn pipelines ready for a first model.**
 
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 ![pandas](https://img.shields.io/badge/pandas-150458?logo=pandas&logoColor=white)
 ![Matplotlib](https://img.shields.io/badge/Matplotlib-11557C)
-![Hadoop](https://img.shields.io/badge/Hadoop_HDFS_3.4-66CCFF?logo=apachehadoop&logoColor=black)
-![Docker](https://img.shields.io/badge/Docker_Compose-2496ED?logo=docker&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikitlearn&logoColor=white)
 ![Jupyter](https://img.shields.io/badge/Jupyter-F37626?logo=jupyter&logoColor=white)
 
 </div>
@@ -19,47 +18,12 @@
 
 | Module | Topic | Dataset | Key skills |
 |---|---|---|---|
-| **HDFS lab** | Distributed storage | — | Docker Compose cluster, NameNode / DataNodes, replication, `dfsadmin` |
 | **Practice 3** | Exploring a dataset with pandas | Telecom customers · 180 × 10 | Loading, typing, filtering, descriptive stats, defining X and y |
 | **Practice 4** | Anatomy of an ML dataset | E-commerce customers · 400 × 12 | Variable roles, data quality, labelled vs. unlabelled, framing problems |
 | **Practice 5** | Exploratory Data Analysis | E-commerce customers · 400 × 12 | Distributions, IQR outliers, correlation, group comparisons, hypotheses |
-
----
-
-## 🗄️ HDFS cluster lab
-
-A four-node Hadoop cluster running locally in Docker, used as the storage layer for the rest of the course.
-
-```mermaid
-flowchart TB
-    CLI["./lab helper script<br/>hdfs CLI"] --> NN
-    UI["Web UI<br/>localhost:9870"] --> NN
-    subgraph CLUSTER["Docker Compose · aula-hdfs"]
-        NN["NameNode<br/>metadata · RPC :9000"]
-        NN --- DN1["DataNode 1"]
-        NN --- DN2["DataNode 2"]
-        NN --- DN3["DataNode 3"]
-    end
-```
-
-| Setting | Value | Why it matters |
-|---|---|---|
-| Hadoop version | 3.4.2 on Eclipse Temurin JRE 11 | Built from the official tarball with **SHA-512 verification** |
-| Replication factor | 2 | Each block survives the loss of one DataNode |
-| Block size | 16 MB (default 128 MB) | Small files still get split across nodes, so distribution is visible in a lab |
-| Heartbeat | 1 s, recheck 5 s | Dead nodes are detected in seconds, which makes failure experiments observable |
-| Resources | 1 GB RAM, 512 MB heap per container | Runs on a laptop |
-| Persistence | Named volumes per node | `docker compose stop` keeps HDFS state |
-
-```bash
-cd LABORATORIO_ALUMNOS_HDFS
-chmod +x lab
-docker compose build namenode
-docker compose up -d namenode dn1 dn2 dn3
-./lab h dfsadmin -report        # expect: Live datanodes (3)
-```
-
-> The lab environment is provided by the course; the work here is deploying, operating and experimenting with it.
+| **Practice 6** *(in progress)* | Preprocessing for ML | E-commerce customers · 400 × 12 | Stratified split, imputation, one-hot and ordinal encoding, Min-Max vs. Z-score, `Pipeline` + `ColumnTransformer` |
+| **Practice 7** *(in progress)* | Train, validation and test | E-commerce customers · 400 × 12 | Three-way split, class balance per set, data leakage, first logistic regression |
+| **Units 1–2 final** | End-to-end exercise | E-commerce customers · 400 × 12 | Diagnosis, train/validation/test split, full preprocessing pipeline and a first logistic regression |
 
 ---
 
@@ -85,23 +49,28 @@ docker compose up -d namenode dn1 dn2 dn3
 - Missing values located in tenure (5), income (4) and spend (3).
 - Correlation matrix and heatmap, numeric-vs-categorical comparisons, categorical cross-tabs and a hypothesis tested against the data.
 
+### Practices 6–7 and the units 1–2 final — from clean data to a first model
+**Business question:** will a customer buy next month? (same e-commerce dataset)
+
+- **Split before anything else:** a stratified split keeps the 61.5 / 38.5 class balance in every set, and the test set is set aside so it is never used to tune anything.
+- **Preprocessing without leakage:** separate `Pipeline`s for numeric (median imputation + scaling), nominal (one-hot) and ordinal (ordered encoding of the loyalty tier) columns, combined in a `ColumnTransformer` that is fitted on the training set only.
+- **Data quality first:** the impossible age found in the EDA is validated and treated as missing before imputation.
+- **First model:** a logistic regression inside the same pipeline, evaluated on the validation set, never on test.
+
 ## Run the notebooks
 
 ```bash
-pip install numpy pandas matplotlib jupyter
+pip install numpy pandas matplotlib scikit-learn jupyter
 jupyter notebook "Notebooks S.aprendizaje"
 ```
 
 ## Project structure
 
 ```text
-├── LABORATORIO_ALUMNOS_HDFS/
-│   ├── compose.yaml          # NameNode + 3 DataNodes
-│   ├── hadoop/               # Dockerfile, core/hdfs/mapred-site.xml, start.sh
-│   └── lab                   # Helper script for HDFS commands
 └── Notebooks S.aprendizaje/
     ├── UD1/                  # Practice 3 + clientes.csv
-    └── UD2/                  # Practices 4–5 + clientes_ecommerce.csv
+    ├── UD2/                  # Practices 4–7 + clientes_ecommerce.csv
+    └── final UD1-2/          # End-to-end exercise for units 1 and 2
 ```
 
 ---
